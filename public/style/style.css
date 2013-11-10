@@ -1,5 +1,6 @@
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: black;
 }
 
 a {
@@ -8,4 +9,6 @@ a {
 
 #map { 
 	height: 540px; 
+	width: 90%;
+	margin: 0 auto;
 }
