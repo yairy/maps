@@ -1,0 +1,14 @@
+doctype 5
+html
+  head
+    title= "Waze Notification System"
+    link(rel='stylesheet', href='/style/style.css')
+    link(rel='stylesheet', href='http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css')
+
+    block head
+
+  body
+    block content
+    script(type='text/javascript', src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+    script(type='text/javascript', src='http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js')
+    script(type='text/javascript', src='/scripts/waze.js')
