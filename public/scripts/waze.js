@@ -12,21 +12,38 @@ waze.map = (function() {
 					}).addTo(map);
 
 		map.on('click', function(e) {
-			var marker = L.marker(e.latlng), 
-                xy;
+			var marker = L.marker(e.latlng);
 			marker.addTo(map);
-			xy = marker.bindPopup("<p>Hello world!<br />This is a nice popup.</p>", { closeOnClick : false } );
-            xy.openPopup;
-			marker.on('click', function (e) {
-				marker.openPopup();
-			});
+			marker.bindPopup("<p>Hello world!</p>").openPopup();
+			
 
 		});
         
+        _refreshBounds();
+
         map.on('viewreset', function(e) {
-            console.log("viewreset");
+        	_refreshBounds();
+        });
+
+        map.on('drag', function(e) {
+        	_refreshBounds();
         });
 	};
+
+	function _refreshBounds() {
+       	var bounds = map.getBounds();
+        $("#mapInfo .west").text(bounds.getWest().toFixed(4));
+    	$("#mapInfo .south").text(bounds.getSouth().toFixed(4));		
+	}
+
+	function _initNotifications(e) {
+		$.ajax({ 
+				url: "notifications",
+				cache: false
+			}).done(function(data) {
+  			console.log(data);
+		});
+	}
     
     function _initUpdate() {
     
@@ -44,6 +61,7 @@ waze.map = (function() {
 	return {
 		init : function() {
 			_initMap();
+			_initNotifications();
             _initUpdate();
 		}
 	}

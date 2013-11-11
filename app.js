@@ -7,6 +7,8 @@ var express = require('express');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
+var request = require('request');
+var _ = require('underscore');
 
 
 var app = express();
@@ -26,6 +28,18 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
+app.get('/notifications', function (req, res) {
+	request('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
+		var notifications = JSON.parse(body),
+			active = _.filter(notifications, function(notification) {
+				return notification.is_active;
+			});
+			res.set('Content-Type', 'appication/json');
+			res.send(JSON.stringify(active));
+
+	});
+
+});
 app.get('/', routes.index);
 
 http.createServer(app).listen(app.get('port'), function(){
