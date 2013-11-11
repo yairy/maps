@@ -3,8 +3,18 @@ extends layout
 block head
 
 block content
-  div.container
-    h1 Notifiction Map
-    div#map
+  h1 Notifiction Map
+  div.pure-g
+    div.pure-u-1-4
+    div.pure-u-3-4
+      div.map-container
+        div#map
+        div#mapInfo
+          small Longitude
+          small Latitude
+        div#mapActions
+          input#lat(type='text')
+          input#lon(type='text')
+          button Set as Center
     
 
