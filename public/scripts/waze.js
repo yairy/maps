@@ -9,12 +9,27 @@ waze.notificationList = Backbone.Collection.extend({
     model : waze.notification
 });
 
-waze.notificationView = Backbone.View.extend({
+waze.singleNotificationView = Backbone.View.extend({
     tagName:  "li",
     render: function() {
       this.$el.html("<span>hello</span>");
       return this;
     }
+});
+
+waze.allNotificationsView = Backbone.View.extend({
+    el: $('div.notification-list'),
+    initialize: function() {
+        this.listenTo(Todos, 'add', this.addOne);
+    },
+    addOne: function(notification) {
+      var view = new waze.singleNotificationView({ model: notification });
+      this.$('div.notification-list').append(view.render().el);
+    },
+    addAll: function() {
+      Todos.each(this.addOne, this);
+    };
+    
 });
 
 waze.map = (function() {
