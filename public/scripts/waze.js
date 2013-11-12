@@ -1,7 +1,25 @@
-var waze = {};
+if (typeof waze === 'undefined') {
+    waze = {};
+}
+
+waze.notification = Backbone.Model.extend({ 
+});
+
+waze.notificationList = Backbone.Collection.extend({ 
+    model : waze.notification
+});
+
+waze.notificationView = Backbone.View.extend({
+    tagName:  "li",
+    render: function() {
+      this.$el.html("<span>hello</span>");
+      return this;
+    }
+});
 
 waze.map = (function() {
-    var map;
+    var map,
+        notifications;
 
 	function _initMap() {
 		map = L.map('map').setView([51.505, -0.09], 13);
@@ -37,12 +55,22 @@ waze.map = (function() {
 	}
 
 	function _initNotifications(e) {
+        notifications = new waze.notificationList;
 		$.ajax({ 
 				url: "notifications",
 				cache: false
 			}).done(function(data) {
-  			console.log(data);
-		});
+                var notificationsArray = _.map(data, function(el) {
+                    return new waze.notification({ 
+                        id : el.id,
+                        title : el.title,
+                        description : el.description,
+                        lon : el.lon,
+                        lat : el.lat
+                    });    
+                });
+                notifications.add(notificationsArray);
+            });
 	}
     
     function _initUpdate() {
