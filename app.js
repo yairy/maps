@@ -29,10 +29,21 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/notifications', function (req, res) {
+	var west = req.param('west'),
+		east = req.param('east'),
+		north = req.param('north'),
+		south = req.param('south'),
+		since = req.param('since');
+
+
 	request('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
 		var notifications = JSON.parse(body),
 			active = _.filter(notifications, function(notification) {
-				return notification.is_active;
+				if (!notification.is_active) {
+					return false;
+				}
+
+				return true;
 			});
 			res.set('Content-Type', 'appication/json');
 			res.send(JSON.stringify(active));
