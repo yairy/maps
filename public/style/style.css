@@ -8,24 +8,49 @@ a {
   color: #00B7FF;
 }
 
+button {
+  border: none;
+  color: blue;
+  padding: 2px;
+  background-color: transparent;
+}
+
+.hidden {
+  display: none;
+}
+
+.notification-list {
+  padding: 1em;
+}
+
+.notification-list > div {
+  border: #ccc 1px solid;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.notification-list .title {
+  padding: 0.5em 0;
+}
+
 .map-container {
-    padding-right : 2em;
+  padding-right: 2em;
 }
 
 #map { 
-	height: 540px; 
-	margin: 0 auto;
+  height: 540px; 
+  margin: 0 auto;
 }
 
 #mapInfo small {
-    margin : 0 1em;
-    color: #111;
+  margin: 0 1em;
+  color: #111;
 }
 
 #mapActions {
-    margin-top: 1em;
+  margin-top: 1em;
 }
 
 #mapActions input {
-    margin-right: 1em;
+  margin-right: 1em;
 }

@@ -19,5 +19,12 @@ block content
           input#lat(type='text')
           input#lon(type='text')
           button Set as Center
-    
+  script#notificationTemplate(type='text/template')
+    div.title <%- title %>
+    div.more-details.hidden
+      div <%- description %>
+      div
+        span Lon: <%- lon %> &nbsp;
+        span Lat: <%- lat %>
+      button Close
 

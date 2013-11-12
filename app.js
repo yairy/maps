@@ -37,9 +37,16 @@ app.get('/notifications', function (req, res) {
 
 
 	request('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
+				console.log(west);
+				console.log(east);
+				console.log(north);
+				console.log(south);
 		var notifications = JSON.parse(body),
 			active = _.filter(notifications, function(notification) {
-				if (!notification.is_active) {
+				console.log(notification.lon);
+				console.log(notification.lat);
+				if ((west && notification.lon < west) || (east && notification.lon > east)
+					|| (north && notification.lat > north) || (south && notification.lat < south)) {
 					return false;
 				}
 
