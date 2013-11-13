@@ -1,7 +1,7 @@
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   color: black;
-  background-color: #eee;
+  background-color: #fff;
 }
 
 a {
@@ -10,9 +10,22 @@ a {
 
 button {
   border: none;
-  color: blue;
+  color: #6d8ac4;
   padding: 2px;
   background-color: transparent;
+}
+
+form {
+    padding: 1em;
+}
+
+form div {
+    margin: 0.5em 0;
+}
+
+form label span {
+    display: inline-block;
+    width: 6em;
 }
 
 .hidden {
@@ -24,8 +37,6 @@ button {
 }
 
 .notification-list > div {
-  border: #ccc 1px solid;
-  border-radius: 5px;
   padding: 5px;
 }
 
@@ -42,15 +53,26 @@ button {
   margin: 0 auto;
 }
 
-#mapInfo small {
+#mapInfo {
+    font-size : 10px;
+}
+
+#mapInfo span {
+  display: inline-block;
   margin: 0 1em;
-  color: #111;
 }
 
-#mapActions {
-  margin-top: 1em;
+#mapInfo span.west,
+#mapInfo span.east,
+#mapInfo span.north,
+#mapInfo span.south {
+  width: 10em; 
 }
 
-#mapActions input {
+#mapInfo span:first-child {
+  margin: 0;
+}
+
+#mapInfo input {
   margin-right: 1em;
 }

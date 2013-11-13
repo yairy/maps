@@ -11,20 +11,43 @@ block content
       div.map-container
         div#map
         div#mapInfo
-          small West
-          small.west
-          small South
-          small.south
-        div#mapActions
+          div
+            span West:    
+            span.west
+            span East:
+            span.east
+            span North:
+            span.north
+            span South:
+            span.south
           input#lat(type='text')
           input#lon(type='text')
           button Set as Center
   script#notificationTemplate(type='text/template')
-    div.title <%- title %>
+    div.title 
+      span <%- title %>
     div.more-details.hidden
       div <%- description %>
       div
         span Lon: <%- lon %> &nbsp;
         span Lat: <%- lat %>
       button Close
+  script#newNotificationTemplate(type='text/template')
+    form
+      div    
+        label 
+          span Title:
+          input.title
+      div
+        label 
+          span Description:
+          input.description
+      div
+        label 
+          span Latitude:
+          input.lat
+      div
+        label 
+          span Longitude:
+          input.lon
 
