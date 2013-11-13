@@ -68,13 +68,15 @@ MapView = Backbone.View.extend({
         });
 
         this.map.on('viewreset', function() {
-            refreshFromServer(that.map, function(notificationArray) {
+            that.refreshBounds();
+            refreshFromServer(that, function(notificationArray) {
                notifications.add(notificationArray); 
             });
         });
 
-        this.map.on('move', function() {
-            refreshFromServer(that.map, function(notificationArray) {
+        this.map.on('moveend', function() {
+            that.refreshBounds();
+            refreshFromServer(that, function(notificationArray) {
                notifications.add(notificationArray); 
             });
         });
@@ -83,8 +85,16 @@ MapView = Backbone.View.extend({
     },
     
     addOne: function(notification) {
-      var marker = L.marker([notification.get('lat'), notification.get('lon')]);
-      marker.addTo(this.map);
+        var lat = notification.get('lat'),
+            lon = notification.get('lon'),
+            marker;
+        
+        if (!lat || !lon) {
+            return;
+        }
+        
+        marker = L.marker([notification.get('lat'), notification.get('lon')]);
+        marker.addTo(this.map);
     },
     
     refreshBounds : function() {
@@ -114,14 +124,13 @@ waze.map = (function() {
     }
     
     function _initUpdate() {
-    
+        
         $("#lat").val(map.center.lat);
         $("#lon").val(map.center.lng);
-        $("#mapInfo button").click(function() {
+        $("#mapActions button").click(function() {
+            debugger;
             var latlng = new L.LatLng($("#lat").val(), $("#lon").val());
-            
             map.setView(latlng, map.getZoom());
-            
         });
     }
 
