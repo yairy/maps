@@ -7,9 +7,7 @@
 
     Notification = Backbone.Model.extend();
 
-    NotificationList = Backbone.Collection.extend({
-        url : '/notifications'
-    });
+    NotificationList = Backbone.Collection.extend();
 
     MapModel = Backbone.Model.extend();
 
