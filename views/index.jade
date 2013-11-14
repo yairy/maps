@@ -32,7 +32,7 @@ block content
         span Lon: <%- lon %> &nbsp;
         span Lat: <%- lat %>
       button Close
-  script#newNotificationTemplate(type='text/template')
+  script#notificationPopupTemplate(type='text/template')
     form.notification-popup
       div    
         label 
@@ -50,5 +50,6 @@ block content
         span.lon
       div
         input(type='submit' value='Save')
+        button.delete delete
     
 

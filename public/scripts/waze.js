@@ -1,26 +1,24 @@
 /*jslint nomen: true*/
-/*global window,Backbone,_,$,L */
+/*global window,Backbone,_,$,L,waze */
 
 
-if (typeof window.waze === "undefined") {
-    window.waze = {};
+if (typeof waze === "undefined") {
+    var waze = {};
 }
 
-window.waze.map = (function () {
+waze.map = (function () {
     'use strict';
 
-    var Notification, NotificationList, MapModel, SingleNotificationView,
-        AllNotificationsView, MapView, DebugView;
+    var Notification, NotificationList, MapModel, NotificationView,
+        NotificationListView, MapView, DebugView;
     
-    Notification = Backbone.Model.extend({
-        url : '/notifications'
-    });
+    Notification = Backbone.Model.extend();
     
     NotificationList = Backbone.Collection.extend();
     
     MapModel = Backbone.Model.extend();
     
-    SingleNotificationView = Backbone.View.extend({
+    NotificationView = Backbone.View.extend({
         tagName:  'div',
         template: _.template($('#notificationTemplate').html()),
         events: {
@@ -39,7 +37,7 @@ window.waze.map = (function () {
         }
     });
     
-    AllNotificationsView = Backbone.View.extend({
+    NotificationListView = Backbone.View.extend({
         el: $('div.notification-list'),
     
         initialize: function () {
@@ -48,7 +46,7 @@ window.waze.map = (function () {
         },
     
         addOne: function (notification) {
-            var view = new SingleNotificationView({ model: notification });
+            var view = new NotificationView({ model: notification });
             this.$el.append(view.render().el);
         },
         
@@ -73,16 +71,15 @@ window.waze.map = (function () {
             this.map.on('click', function (e) {
                 var marker = L.marker(e.latlng);
                 marker.addTo(that.map);
-                marker.bindPopup($('#newNotificationTemplate').html());
+                marker.bindPopup($('#notificationPopupTemplate').html());
                 marker.on('popupopen', function (event) {
-                    var $form = $('form.notification-popup');
+                    var $form = $('form.notification-popup'),
+                        notification;
                     
                     $form.find('.lon').text(e.latlng.lng);
                     $form.find('.lat').text(e.latlng.lat);
-                    $form.addClass('new-notification').removeClass('update-notification');
+                    $form.addClass('unsaved-notification');
                     $form.submit(function (event) {
-                        var notification;
-                        
                         event.preventDefault();
                         notification = new Notification({
                             lon : e.latlng.lng,
@@ -91,8 +88,25 @@ window.waze.map = (function () {
                             title : $form.find('input.title').val()
                         });
                         that.collection.add(notification);
-                        notification.save();
+                        notification.save({
+                            url : '/notifications',
+                            success : function () {
+                                $form.removeClass('unsaved-notification');
+                                //TODO display success message
+                            },
+                            error : function () {
+                                //TODO display error message
+                            }
+                        });
                         
+                    });
+                    
+                    $form.find('button.delete').click(function (event) {
+                        event.preventDefault();
+                        if (!$form.hasClass('unsaved-notification')) {
+                            notification.destroy();
+                        }
+                        that.map.removeLayer(marker);
                     });
                 });
             });
@@ -109,6 +123,7 @@ window.waze.map = (function () {
         addOne: function (notification) {
             var lat = notification.get('lat'),
                 lon = notification.get('lon'),
+                that = this,
                 marker;
     
             if (!lat || !lon) {
@@ -117,7 +132,7 @@ window.waze.map = (function () {
     
             marker = L.marker([lat, lon]);
             marker.addTo(this.map);
-            marker.bindPopup($('#newNotificationTemplate').html());
+            marker.bindPopup($('#notificationPopupTemplate').html());
             marker.on('popupopen', function (event) {
                 var $form = $('form.notification-popup');
                 
@@ -125,7 +140,19 @@ window.waze.map = (function () {
                 $form.find('.lat').text(lat);
                 $form.find('input.title').val(notification.get('title'));
                 $form.find('input.description').val(notification.get('description'));
-                $form.removeClass('new-notification').addClass('update-notification');
+                
+                $form.submit(function (event) {
+                    event.preventDefault();
+                    //notification.save();
+                });
+                    
+                $form.find('button.delete').click(function (event) {
+                    event.preventDefault();
+                    notification.destroy({
+                        url : '/notifications/' + notification.get('id') + '.json'
+                    });
+                });
+
             });
         },
         
@@ -156,8 +183,9 @@ window.waze.map = (function () {
         },
     
         update : function (model) {
+            var that = this;
             _.each(['west', 'east', 'north', 'south'], function (el) {
-                this.$("." + el).text(model.get(el).toFixed(4));
+                that.$("." + el).text(model.get(el).toFixed(4));
             });
         },
     
@@ -185,7 +213,7 @@ window.waze.map = (function () {
             notifications.fetch({reset: true, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=", mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
         });
     
-        app = new AllNotificationsView({ collection : notifications });
+        app = new NotificationListView({ collection : notifications });
         mapView = new MapView({ collection : notifications, model : mapModel });
         debugView = new DebugView({ model : mapModel });
         
@@ -203,4 +231,4 @@ window.waze.map = (function () {
     
 }());
 
-$(window.waze.map.init);
+$(waze.map.init);
