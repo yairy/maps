@@ -69,11 +69,13 @@ app.post('/notifications', function (req, res) {
         params['notification[' + prop + ']'] = req.param(prop);
     });
 
-    request.post({ url : 'http://test-notifications.staging.waze.com/notifications.json', qs : params}, function (error, response, body) {
-        if (!error) {
-            console.log('yessss'); // Print the google web page.
-        }
-    });
+    request.post({ url : 'http://test-notifications.staging.waze.com/notifications.json', qs : params}).pipe(res);
+
+});
+
+// we'll use this form: app['delete'] to shush the linter ('delete' is a reserved word)
+app['delete']('/notifications/:id', function (req, res) {
+    request.del({ url : 'http://test-notifications.staging.waze.com/notifications/' + req.params.id + '.json'}).pipe(res);
 
 });
 

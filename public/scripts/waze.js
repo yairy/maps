@@ -12,7 +12,9 @@ waze.map = (function () {
     var Notification, NotificationList, MapModel, NotificationView,
         NotificationListView, MapView, DebugView;
     
-    Notification = Backbone.Model.extend();
+    Notification = Backbone.Model.extend({
+        url : '/notifications'
+    });
     
     NotificationList = Backbone.Collection.extend();
     
@@ -89,7 +91,6 @@ waze.map = (function () {
                         });
                         that.collection.add(notification);
                         notification.save({
-                            url : '/notifications',
                             success : function () {
                                 $form.removeClass('unsaved-notification');
                                 //TODO display success message
@@ -149,7 +150,7 @@ waze.map = (function () {
                 $form.find('button.delete').click(function (event) {
                     event.preventDefault();
                     notification.destroy({
-                        url : '/notifications/' + notification.get('id') + '.json'
+                        url : '/notifications/' + notification.get('id')
                     });
                 });
 
