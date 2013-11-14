@@ -1,3 +1,6 @@
+/*jslint nomen: true*/
+/*jslint node: true */
+"use strict";
 
 /**
  * Module dependencies.
@@ -21,12 +24,13 @@ app.use(express.favicon('public/images/favicon.ico'));
 app.use(express.logger('dev'));
 app.use(express.bodyParser());
 app.use(express.methodOverride());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express['static'](path.join(__dirname, 'public')));
 
 // development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
+if ('development' === app.get('env')) {
+    app.use(express.errorHandler());
 }
+
 
 app.get('/notifications', function (req, res) {
 	var west = req.param('west'),
@@ -35,40 +39,46 @@ app.get('/notifications', function (req, res) {
 		south = req.param('south'),
 		since = req.param('since');
 
+    request.get('http://test-notifications.staging.waze.com/notifications/updates.json', function (error, response, body) {
+        var notifications,
+            active,
+            locatedInArea = function (notification, west, east, north, south) {
+                return notification.lon > west && notification.lon < east && notification.lat < north && notification.lat > south;
+            };
+        
+        if (error) {
+            res.send('500', "Server Error");
+        } else {
+            notifications = JSON.parse(body);
+            active = _.filter(notifications, function (notification) {
+                if (notification.is_active && locatedInArea(notification, west, east, north, south) && !isNaN(notification.lon) && !isNaN(notification.lat)) {
+                    return true;
+                }
 
-	request.get('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
-		var notifications = JSON.parse(body),
-			active = _.filter(notifications, function(notification) {
-				if ((west && notification.lon < west) || (east && notification.lon > east)
-					|| (north && notification.lat > north) || (south && notification.lat < south)) {
-					return false;
-				}
-
-				return true;
-			});
-			res.set('Content-Type', 'appication/json');
-			res.send(JSON.stringify(active));
-
+                return false;
+            });
+            res.json(active);
+        }
 	});
-
+            
 });
 
 app.post('/notifications', function (req, res) {
-	var lon = req.param('lon'),
-		lat = req.param('lat'),
-		description = req.param('description'),
-		title = req.param('title');
+	var params = {};
+    _.each(['lon', 'lat', 'description', 'title'], function (prop) {
+        params['notification[' + prop + ']'] = req.param(prop);
+    });
 
-
-	request.post('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
-	});
+    request.post({ url : 'http://test-notifications.staging.waze.com/notifications.json', qs : params}, function (error, response, body) {
+        if (!error) {
+            console.log('yessss'); // Print the google web page.
+        }
+    });
 
 });
 
-
-
 app.get('/', routes.index);
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+http.createServer(app).listen(app.get('port'), function () {
+    console.log('Express server listening on port ' + app.get('port'));
 });
