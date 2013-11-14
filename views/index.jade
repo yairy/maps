@@ -33,7 +33,7 @@ block content
         span Lat: <%- lat %>
       button Close
   script#newNotificationTemplate(type='text/template')
-    form
+    form.notification-popup
       div    
         label 
           span Title:
@@ -43,11 +43,12 @@ block content
           span Description:
           input.description
       div
-        label 
-          span Latitude:
-          input.lat
+        span Latitude:
+        span.lat
       div
-        label 
-          span Longitude:
-          input.lon
+        span Longitude:
+        span.lon
+      div
+        input(type='submit' value='Save')
+    
 

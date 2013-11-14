@@ -23,6 +23,7 @@ form div {
     margin: 0.5em 0;
 }
 
+form > div > span,
 form label span {
     display: inline-block;
     width: 6em;

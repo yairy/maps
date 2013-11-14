@@ -36,15 +36,9 @@ app.get('/notifications', function (req, res) {
 		since = req.param('since');
 
 
-	request('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
-				console.log(west);
-				console.log(east);
-				console.log(north);
-				console.log(south);
+	request.get('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
 		var notifications = JSON.parse(body),
 			active = _.filter(notifications, function(notification) {
-				console.log(notification.lon);
-				console.log(notification.lat);
 				if ((west && notification.lon < west) || (east && notification.lon > east)
 					|| (north && notification.lat > north) || (south && notification.lat < south)) {
 					return false;
@@ -58,6 +52,21 @@ app.get('/notifications', function (req, res) {
 	});
 
 });
+
+app.post('/notifications', function (req, res) {
+	var lon = req.param('lon'),
+		lat = req.param('lat'),
+		description = req.param('description'),
+		title = req.param('title');
+
+
+	request.post('http://test-notifications.staging.waze.com/notifications/updates.json', function(error, response, body) {
+	});
+
+});
+
+
+
 app.get('/', routes.index);
 
 http.createServer(app).listen(app.get('port'), function(){

@@ -1,11 +1,18 @@
+/*jslint nomen: true*/
+/*global window,Backbone,_,$,L */
 (function () {
-    var map;
+    "use strict";
+    
+    var Notification, NotificationList, MapModel, SingleNotificationView,
+        AllNotificationsView, MapView, DebugView;
 
-    if (typeof waze === 'undefined') {
+    if (typeof window.waze === "undefined") {
         window.waze = {};
     }
 
-    Notification = Backbone.Model.extend();
+    Notification = Backbone.Model.extend({
+        url : '/notifications'
+    });
 
     NotificationList = Backbone.Collection.extend();
 
@@ -16,16 +23,16 @@
         template: _.template($('#notificationTemplate').html()),
         events: {
             'click .title span'   : 'expandNotification',
-            'click button'   : 'collapseNotification',
+            'click button'   : 'collapseNotification'
         },
-        render: function() {
+        render: function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
-        expandNotification : function() {
+        expandNotification : function () {
             this.$('.more-details').removeClass('hidden');
         },
-        collapseNotification : function() {
+        collapseNotification : function () {
             this.$('.more-details').addClass('hidden');
         }
     });
@@ -33,24 +40,24 @@
     AllNotificationsView = Backbone.View.extend({
         el: $('div.notification-list'),
 
-        initialize: function() {
+        initialize: function () {
             this.listenTo(this.collection, 'add', this.addOne);
             this.listenTo(this.collection, 'reset', this.addAll);
         },
 
-        addOne: function(notification) {
+        addOne: function (notification) {
             var view = new SingleNotificationView({ model: notification });
             this.$el.append(view.render().el);
         },
         
-        addAll: function() {
+        addAll: function () {
             this.$el.empty();
             this.collection.each(this.addOne, this);
         }
     });
 
     MapView = Backbone.View.extend({
-        initialize: function() {
+        initialize: function () {
             var that = this,
                 bounds;
 
@@ -61,22 +68,43 @@
             }).addTo(this.map);
             this.refreshBounds();
 
-            this.map.on('click', function(e) {
+            this.map.on('click', function (e) {
                 var marker = L.marker(e.latlng);
                 marker.addTo(that.map);
                 marker.bindPopup($('#newNotificationTemplate').html());
-            }); 
+                marker.on('popupopen', function (event) {
+                    var $form = $('form.notification-popup');
+                    
+                    $form.find('.lon').text(e.latlng.lng);
+                    $form.find('.lat').text(e.latlng.lat);
+                    $form.addClass('new-notification').removeClass('update-notification');
+                    $form.submit(function (event) {
+                        var notification;
+                        
+                        event.preventDefault();
+                        notification = new Notification({
+                            lon : e.latlng.lng,
+                            lat : e.latlng.lng,
+                            description : $form.find('input.description').val(),
+                            title : $form.find('input.title').val()
+                        });
+                        that.collection.add(notification);
+                        notification.save();
+                        
+                    });
+                });
+            });
 
-            this.map.on('viewreset moveend', function() {
+            this.map.on('viewreset moveend', function () {
                 that.refreshBounds();
             });
 
             this.listenTo(this.collection, 'add', this.addOne);
             this.listenTo(this.collection, 'reset', this.addAll);
-            this.listenTo(this.model, 'change:center', this.panMap)
+            this.listenTo(this.model, 'change:center', this.panMap);
         },
 
-        addOne: function(notification) {
+        addOne: function (notification) {
             var lat = notification.get('lat'),
                 lon = notification.get('lon'),
                 marker;
@@ -85,26 +113,35 @@
                 return;
             }
 
-            marker = L.marker([notification.get('lat'), notification.get('lon')]);
+            marker = L.marker([lat, lon]);
             marker.addTo(this.map);
             marker.bindPopup($('#newNotificationTemplate').html());
+            marker.on('popupopen', function (event) {
+                var $form = $('form.notification-popup');
+                
+                $form.find('.lon').text(lon);
+                $form.find('.lat').text(lat);
+                $form.find('input.title').val(notification.get('title'));
+                $form.find('input.description').val(notification.get('description'));
+                $form.removeClass('new-notification').addClass('update-notification');
+            });
         },
         
-        addAll: function() {
-          this.collection.each(this.addOne, this);  
+        addAll: function () {
+            this.collection.each(this.addOne, this);
         },
 
-        panMap: function() {
+        panMap: function () {
             this.map.panTo(this.model.get('center'));
         },
 
-        refreshBounds : function() {
+        refreshBounds : function () {
             var bounds = this.map.getBounds();
             this.model.set({'west' : bounds.getWest(),
                 'east' : bounds.getEast(),
                 'north': bounds.getNorth(),
                 'south': bounds.getSouth()
-            });
+                });
         }
 
     });
@@ -112,13 +149,13 @@
     DebugView = Backbone.View.extend({
         el: $('#mapInfo'),
 
-        initialize: function() {
+        initialize: function () {
             this.listenTo(this.model, 'change', this.update);
         },
 
-        update : function(model) {
-            _.each(['west', 'east', 'north', 'south'], function(el) {
-                this.$("." + el).text(model.get(el).toFixed(2));
+        update : function (model) {
+            _.each(['west', 'east', 'north', 'south'], function (el) {
+                this.$("." + el).text(model.get(el).toFixed(4));
             });
         },
 
@@ -126,13 +163,13 @@
             'click button'   : 'centerButtonClicked'
         },
 
-        centerButtonClicked: function() {
+        centerButtonClicked: function () {
             this.model.set('center', [this.$("#lat").val(), this.$("#lon").val()]);
         }
 
     });
 
-    waze.map = (function() {
+    window.waze.map = (function () {
 
         function _init() {
 
@@ -144,7 +181,7 @@
 
             notifications = new NotificationList();
             mapModel = new MapModel();
-            mapModel.on("change", function() {
+            mapModel.on("change", function () {
                 notifications.fetch({reset: true, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=", mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
             });
 
@@ -152,25 +189,20 @@
             mapView = new MapView({ collection : notifications, model : mapModel });
             debugView = new DebugView({ model : mapModel });
             
-            _.each(['west', 'east', 'north', 'south'], function(el) {
-                $("#mapInfo ." + el).text(mapModel.get(el).toFixed(2));
+            _.each(['west', 'east', 'north', 'south'], function (el) {
+                $("#mapInfo ." + el).text(mapModel.get(el).toFixed(4));
             });
 
         }
 
-        function _initUpdate() {
-            $("#lat").val(map.center.lat);
-            $("#lon").val(map.center.lng);
-        }
-
         return {
-            init : function() {
+            init : function () {
                 _init();
             }
-        }
+        };
 
     })();
 
-    $(waze.map.init);
+    $(window.waze.map.init);
 
 })();
