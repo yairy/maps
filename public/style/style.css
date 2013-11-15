@@ -29,6 +29,25 @@ form label span {
     width: 6em;
 }
 
+.success-message,
+.error-message {
+    display: none;
+    font-size: small
+}
+
+.success-message {
+    color: green;
+}
+
+.error-message {
+    color: red;
+}
+
+.success .success-message,
+.error .error-message {
+    display:inline;
+}
+
 .hidden {
   display: none;
 }

@@ -1,6 +1,6 @@
 /*jslint nomen: true*/
-/*global window,Backbone,_,$,L,waze */
-
+/*global Backbone,_,$,L,waze */
+/*jslint browser: true*/
 
 if (typeof waze === "undefined") {
     var waze = {};
@@ -24,18 +24,15 @@ waze.map = (function () {
         tagName:  'div',
         template: _.template($('#notificationTemplate').html()),
         events: {
-            'click .title span'   : 'expandNotification',
+            'click .title span'   : 'toggleNotification',
             'click button'   : 'collapseNotification'
         },
         render: function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
-        expandNotification : function () {
-            this.$('.more-details').removeClass('hidden');
-        },
-        collapseNotification : function () {
-            this.$('.more-details').addClass('hidden');
+        toggleNotification : function () {
+            this.$('.more-details').toggleClass('hidden');
         }
     });
     
@@ -90,13 +87,14 @@ waze.map = (function () {
                             title : $form.find('input.title').val()
                         });
                         that.collection.add(notification);
-                        notification.save({
+                        notification.save({}, {
                             success : function () {
                                 $form.removeClass('unsaved-notification');
-                                //TODO display success message
+                                $form.addClass('success');
+                                setTimeout(function () {marker.closePopup(); }, 1000);
                             },
                             error : function () {
-                                //TODO display error message
+                                $form.addClass('error');
                             }
                         });
                         
@@ -207,16 +205,24 @@ waze.map = (function () {
             mapView,
             debugView,
             notifications;
+        
+        function fetch(notifications, model) {
+            notifications.fetch({reset: true, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=",             mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
+        }
     
         notifications = new NotificationList();
         mapModel = new MapModel();
         mapModel.on("change", function () {
-            notifications.fetch({reset: true, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=", mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
+            fetch(notifications, mapModel);
         });
     
         app = new NotificationListView({ collection : notifications });
         mapView = new MapView({ collection : notifications, model : mapModel });
         debugView = new DebugView({ model : mapModel });
+        
+        setInterval(function () {
+            fetch(notifications, mapModel);
+        }, 10000);
         
         _.each(['west', 'east', 'north', 'south'], function (el) {
             $("#mapInfo ." + el).text(mapModel.get(el).toFixed(4));
