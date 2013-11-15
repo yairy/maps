@@ -10,7 +10,7 @@ block content
     div.pure-u-3-4
       div.map-container
         div#map
-        div#mapInfo
+        div#debugInfo
           div
             span West:    
             span.west
@@ -20,20 +20,21 @@ block content
             span.north
             span South:
             span.south
-          input#lat(type='text')
-          input#lon(type='text')
-          button Set as Center
+          div
+            input#lat(type='text')
+            input#lon(type='text')
+            button.pure-button.pure-button-primary Set as Center
   script#notificationTemplate(type='text/template')
     div.title 
       span <%- title %>
     div.more-details.hidden
       div <%- description %>
+      div Lon: <%- lon %> &nbsp;
+      div Lat: <%- lat %>
       div
-        span Lon: <%- lon %> &nbsp;
-        span Lat: <%- lat %>
-      button Close
+        button.pure-button.pure-button-error delete
   script#notificationPopupTemplate(type='text/template')
-    form.notification-popup
+    form.notification-popup.pure-form.pure-form-stacked
       div    
         label 
           span Title:
@@ -49,8 +50,8 @@ block content
         span Longitude:
         span.lon
       div
-        input(type='submit' value='Save')
-        button.delete delete
+        input.pure-button.pure-button-primary(type='submit' value='Save')
+        button.delete.pure-button.pure-button-error delete
         span.error-message Error
         span.success-message Success
         

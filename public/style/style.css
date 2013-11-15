@@ -13,6 +13,11 @@ button {
   color: #6d8ac4;
   padding: 2px;
   background-color: transparent;
+  margin-right: 5px;
+}
+
+input[type='submit'] {
+    margin-right: 5px;
 }
 
 form {
@@ -73,26 +78,41 @@ form label span {
   margin: 0 auto;
 }
 
-#mapInfo {
+#debugInfo {
     font-size : 10px;
 }
 
-#mapInfo span {
+#debugInfo span {
   display: inline-block;
   margin: 0 1em;
 }
 
-#mapInfo span.west,
-#mapInfo span.east,
-#mapInfo span.north,
-#mapInfo span.south {
+#debugInfo span.west,
+#debugInfo span.east,
+#debugInfo span.north,
+#debugInfo span.south {
   width: 10em; 
 }
 
-#mapInfo span:first-child {
+#debugInfo > div:last-child {
+  margin-top: 1em;
+}
+
+#debugInfo span:first-child {
   margin: 0;
 }
 
-#mapInfo input {
+#debugInfo input {
   margin-right: 1em;
+}
+
+.pure-button-error {
+  background: rgb(202, 60, 60); /* this is a maroon */
+}
+
+.pure-button-primary,
+.pure-button-error {
+  color: white;
+  border-radius: 4px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }

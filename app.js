@@ -12,6 +12,7 @@ var http = require('http');
 var path = require('path');
 var request = require('request');
 var _ = require('underscore');
+var wazeUrl = 'http://test-notifications.staging.waze.com';
 
 
 var app = express();
@@ -31,7 +32,6 @@ if ('development' === app.get('env')) {
     app.use(express.errorHandler());
 }
 
-
 app.get('/notifications', function (req, res) {
 	var west = req.param('west'),
 		east = req.param('east'),
@@ -39,7 +39,7 @@ app.get('/notifications', function (req, res) {
 		south = req.param('south'),
 		since = req.param('since');
 
-    request.get('http://test-notifications.staging.waze.com/notifications/updates.json', function (error, response, body) {
+    request.get(wazeUrl + '/notifications/updates.json', function (error, response, body) {
         var notifications,
             active,
             locatedInArea = function (notification, west, east, north, south) {
@@ -69,13 +69,35 @@ app.post('/notifications', function (req, res) {
         params['notification[' + prop + ']'] = req.param(prop);
     });
 
-    request.post({ url : 'http://test-notifications.staging.waze.com/notifications.json', qs : params}).pipe(res);
+    request.post({ url : wazeUrl + '/notifications.json', qs : params}).pipe(res);
+
+});
+
+app.put('/notifications/:id', function (req, res) {
+    console.log(wazeUrl + '/notifications/' + req.params.id);
+    console.log(req.param('description'));
+	var params = {};
+    _.each(['lon', 'lat', 'description', 'title'], function (prop) {
+        params['notification[' + prop + ']'] = req.param(prop);
+    });
+
+    request.put({ url : wazeUrl + '/notifications/' + req.params.id + '.json', qs : params}).pipe(res);
+//    request.post({ url : wazeUrl + '/notifications/' + req.params.id, qs : params}, function (error, response, body) {
+//        if (error) {
+//            console.log("error!!!");
+//            res.send('500', "Server Error");
+//        }
+//        else {
+//            console.log("succes!!!");
+//        }
+//            
+//    });
 
 });
 
 // we'll use this form: app['delete'] to shush the linter ('delete' is a reserved word)
 app['delete']('/notifications/:id', function (req, res) {
-    request.del({ url : 'http://test-notifications.staging.waze.com/notifications/' + req.params.id + '.json'}).pipe(res);
+    request.del({ url : wazeUrl + '/notifications/' + req.params.id + '.json'}).pipe(res);
 
 });
 
