@@ -3,9 +3,13 @@ extends layout
 block head
 
 block content
-  h1 Notifiction Map
+  header
+    h1 Notifiction Map
   div.pure-g
     div.pure-u-1-4
+        div.notification-list-counter Showing 10 of 
+            span.counter
+            |  notifications
         div.notification-list
     div.pure-u-3-4
       div.map-container
@@ -21,12 +25,13 @@ block content
             span South:
             span.south
           div
-            input#lat(type='text')
-            input#lon(type='text')
-            button.pure-button.pure-button-primary Set as Center
+            form.pure-form
+              input#lat(type='text' placeholder='Latitude')
+              input#lon(type='text' placeholder='Longitude')
+              button.pure-button.pure-button-primary Set as Center
   script#notificationTemplate(type='text/template')
     div.title 
-      span <%- title %>
+      button.show-as-link <%- title %>
     div.more-details.hidden
       div <%- description %>
       div Lon: <%- lon %> &nbsp;
@@ -38,11 +43,11 @@ block content
       div    
         label 
           span Title:
-          input.title
+          input.title(type='text')
       div
         label 
           span Description:
-          input.description
+          input.description(type='text')
       div
         span Latitude:
         span.lat

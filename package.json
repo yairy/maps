@@ -8,7 +8,11 @@
   "dependencies": {
     "express": "3.4.3",
     "jade": "*",
-    "request" : "*",
-    "underscore" : "*"
+    "request": "*",
+    "underscore": "*"
+  },
+  "subdomain": "yair-maps",
+  "engines": {
+    "node": "0.10.x"
   }
 }

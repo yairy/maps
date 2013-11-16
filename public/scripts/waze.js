@@ -10,7 +10,7 @@ waze.map = (function () {
     'use strict';
 
     var Notification, NotificationList, MapModel, NotificationView,
-        NotificationListView, MapView, DebugView, M;
+        NotificationListView, NotificationListCounterView, MapView, DebugView, M;
     
     Notification = Backbone.Model.extend();
     
@@ -22,34 +22,39 @@ waze.map = (function () {
         tagName:  'div',
         template: _.template($('#notificationTemplate').html()),
         events: {
-            'click .title span'   : 'toggleNotification',
+            'click .title button'   : 'toggleNotification',
             'click button'   : 'collapseNotification'
         },
         initialize: function () {
             this.listenTo(this.model, 'destroy', this.destroyNotification);
             this.listenTo(this.model, 'change', this.render);
+            this.listenTo(this.model, 'remove', this.remove);
         },
         render: function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
+        },
+        remove: function () {
+            this.$el.remove();
         },
         toggleNotification : function () {
             this.$('.more-details').toggleClass('hidden');
         },
         renderMarker : function () {
             var that = this,
-                notification = this.model;
+                notification = this.model,
+                options = { title : notification.get('title'), riseOnHover : true };
             
-            this.marker = L.marker([notification.get('lat'), notification.get('lon')]);
+            this.marker = L.marker([notification.get('lat'), notification.get('lon')], options);
             this.marker.addTo(M);
             this.marker.bindPopup($('#notificationPopupTemplate').html(), { keepInView : true });
             this.marker.on('popupopen', function (event) {
                 var $form = $('form.notification-popup');
                 
-                $form.find('.lon').text(notification.get('lon').toFixed(4));
-                $form.find('.lat').text(notification.get('lat').toFixed(4));
-                $form.find('.description').val(notification.get('description'));
-                $form.find('.title').val(notification.get('title'));
+                $form.find('.lon').text(notification.get('lon'));
+                $form.find('.lat').text(notification.get('lat'));
+                $form.find('.description').val(notification.escape('description'));
+                $form.find('.title').val(notification.escape('title'));
                 $form.submit(function (event) {
                     event.preventDefault();
                     notification.set('lon', $form.find('.lon').text());
@@ -90,15 +95,33 @@ waze.map = (function () {
         },
     
         addOne: function (notification) {
-            var view = new NotificationView({ model: notification});
-            this.$el.append(view.render().el);
+            var index = this.collection.indexOf(notification),
+                view = new NotificationView({ model: notification});
             view.renderMarker();
+            if (index === 0) {
+                this.$el.append(view.render().el);
+            } else {
+                index = index - 1;
+                this.$el.find(">div:eq(" + index + ")").after(view.render().el);
+            }
         },
         
         addAll: function () {
-            this.$el.empty();
             this.collection.each(this.addOne, this);
         }
+    });
+
+    NotificationListCounterView = Backbone.View.extend({
+        el: $('div.notification-list-counter span'),
+    
+        initialize: function () {
+            this.listenTo(this.collection, 'all', this.updateConter);
+        },
+    
+        updateConter : function () {
+            this.$el.text(this.collection.size());
+        }
+        
     });
     
     MapView = Backbone.View.extend({
@@ -106,11 +129,8 @@ waze.map = (function () {
             var that = this,
                 bounds;
     
-            this.refreshBounds();
-    
             M.on('click', function (e) {
                 var notification = new Notification({lon : e.latlng.lng, lat : e.latlng.lat, title : 'untitled', description : ''});
-                notification.on('destroy', function () {console.log("boooo"); });
                 that.collection.add(notification);
             });
     
@@ -126,12 +146,7 @@ waze.map = (function () {
         },
     
         refreshBounds : function () {
-            var bounds = M.getBounds();
-            this.model.set({'west' : bounds.getWest(),
-                'east' : bounds.getEast(),
-                'north': bounds.getNorth(),
-                'south': bounds.getSouth()
-                });
+            this.model.set(getBounds());
         }
     
     });
@@ -163,41 +178,85 @@ waze.map = (function () {
     function _init() {
     
         var notifications,
+            counterView,
             debugView,
             mapModel,
             mapView,
             app;
         
-        function fetch(notifications, model, reset) {
+        function fetch(reset) {
             notifications.fetch({reset: reset, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=",             mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
         }
     
         notifications = new NotificationList();
-        mapModel = new MapModel();
+        notifications.comparator = function (first, second) {
+            var s = Math.sqrt,
+                center = getBounds().center,
+                centerLat = center.lat,
+                centerLon = center.lng,
+                firstLat = first.get('lat'),
+                firstLon = first.get('lon'),
+                secondLat = second.get('lat'),
+                secondLon = second.get('lon'),
+                firstDisance,
+                secondDistance,
+                p;
+            
+            // p is just a function that takes a numer return its power of 2
+            p = (function () { return function (x) { return Math.pow(x, 2); }; }());
+            
+            firstDisance = s(p(firstLat - centerLat) + p(firstLon - centerLon));
+            secondDistance = s(p(secondLat - centerLat) + p(secondLon - centerLon));
+            
+            if (firstDisance < secondDistance) {
+                return -1;
+            }
+            if (firstDisance > secondDistance) {
+                return 1;
+            }
+            return 0;
+        };
+        
+        mapModel = new MapModel(getBounds()); //setting the initial state of the model
         mapModel.on("change", function () {
-            fetch(notifications, mapModel, true);
+            fetch(false);
         });
     
         mapView = new MapView({ collection : notifications, model : mapModel});
         app = new NotificationListView({ collection : notifications});
+        counterView = new NotificationListCounterView({ collection : notifications});
         debugView = new DebugView({ model : mapModel });
+        fetch(false);
         
-        setInterval(function () {
-            fetch(notifications, mapModel, false);
-            notifications.each(function (notification) {
-                if (notification.get('is_active')) {
-                    console.log(notification.get('title'));
-                }
-                    
-            });
-            
-        }, 10000);
+//        setInterval(function () {
+//            fetch(false);
+//            notifications.each(function (notification) {
+//                if (notification.get('is_active')) {
+//                    console.log(notification.get('title'));
+//                }
+//                    
+//            });
+//            
+//        }, 3000);
         
         _.each(['west', 'east', 'north', 'south'], function (el) {
             $("#debugInfo ." + el).text(mapModel.get(el).toFixed(4));
         });
     
     }
+    
+    function getBounds() {
+        var bounds = M.getBounds(),
+            coordinates = {
+                west : bounds.getWest(),
+                east : bounds.getEast(),
+                north : bounds.getNorth(),
+                south : bounds.getSouth(),
+                center : bounds.getCenter()
+            };
+        return coordinates;
+    }
+
     
     function initMap() {
         M = L.map('map').setView([51.505, -0.09], 13); //London!
