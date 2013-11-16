@@ -23,7 +23,52 @@ waze.map = (function () {
         template: _.template($('#notificationTemplate').html()),
         events: {
             'click .title button'   : 'toggleNotification',
-            'click button'   : 'collapseNotification'
+            'click button.edit'   : 'launchPopup'
+        },
+        launchPopup: function () {
+          var notification = this.model;
+          
+          $('div.popup').bPopup({
+            onOpen : function() {
+                var $form = $('form.notification-edit-popup');
+                this.modelToForm($form,notification);
+                $form.submit(function (event) {
+                    event.preventDefault();
+                    this.formToModel($form,notification);
+                    notification.save({}, {
+                        url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
+                        success : function () {
+                            $form.addClass('success');
+                            setTimeout(function () {that.marker.closePopup(); }, 1000);
+                        },
+                        error : function () {
+                            $form.addClass('error');
+                        }
+                    });
+                    
+                });
+                
+                $form.find('button.delete').click(function (event) {
+                    event.preventDefault();
+                    notification.destroy({ url : '/notifications/' + notification.get('id')});
+                });
+            },
+            closeClass : 'close'
+          });
+        },
+        modelToForm: function ($form, notification) {
+                $form.find('.lon').data('lon' ,notification.get('lon'));
+                $form.find('.lon').text(parseFloat(notification.escape('lon')).toFixed(4));
+                $form.find('.lat').data('lat' ,notification.get('lat'));
+                $form.find('.lat').text(parseFloat(notification.escape('lat')).toFixed(4));
+                $form.find('.description').val(notification.escape('description'));
+                $form.find('.title').val(notification.escape('title'));        
+        },
+        formToModel: function ($form, notification) {
+                notification.set('lon', $form.find('.lon').data('lon'));
+                notification.set('lat', $form.find('.lat').data('lat'));
+                notification.set('description', $form.find('.description').val());
+                notification.set('title', $form.find('.title').val());
         },
         initialize: function () {
             this.listenTo(this.model, 'destroy', this.destroyNotification);
@@ -31,7 +76,11 @@ waze.map = (function () {
             this.listenTo(this.model, 'remove', this.remove);
         },
         render: function () {
-            this.$el.html(this.template(this.model.toJSON()));
+            var params = this.model.toJSON();
+            
+            params.lat = params.lat.toFixed(4);
+            params.lon = params.lon.toFixed(4);
+            this.$el.html(this.template(params));
             return this;
         },
         remove: function () {
@@ -51,14 +100,11 @@ waze.map = (function () {
             this.marker.on('popupopen', function (event) {
                 var $form = $('form.notification-popup');
                 
-                $form.find('.lon').text(notification.get('lon'));
-                $form.find('.lat').text(notification.get('lat'));
-                $form.find('.description').val(notification.escape('description'));
-                $form.find('.title').val(notification.escape('title'));
+                this.modelToForm($form,notification);
                 $form.submit(function (event) {
                     event.preventDefault();
-                    notification.set('lon', $form.find('.lon').text());
-                    notification.set('lat', $form.find('.lat').text());
+                    notification.set('lon', $form.find('.lon').data('lon'));
+                    notification.set('lat', $form.find('.lat').data('lat'));
                     notification.set('description', $form.find('.description').val());
                     notification.set('title', $form.find('.title').val());
                     notification.save({}, {
@@ -79,6 +125,10 @@ waze.map = (function () {
                     notification.destroy({ url : '/notifications/' + notification.get('id')});
                 });
             });
+            if (this.model.isNew()) {
+                this.marker.openPopup();
+            }
+
         },
         destroyNotification : function () {
             this.$el.remove();
@@ -107,6 +157,7 @@ waze.map = (function () {
         },
         
         addAll: function () {
+            this.$el.empty();
             this.collection.each(this.addOne, this);
         }
     });
@@ -130,7 +181,8 @@ waze.map = (function () {
                 bounds;
     
             M.on('click', function (e) {
-                var notification = new Notification({lon : e.latlng.lng, lat : e.latlng.lat, title : 'untitled', description : ''});
+                console.log('click');
+                var notification = new Notification({lon : e.latlng.lng, lat : e.latlng.lat, title : 'untitled', description : '', votes_up : 0});
                 that.collection.add(notification);
             });
     
@@ -226,7 +278,7 @@ waze.map = (function () {
         app = new NotificationListView({ collection : notifications});
         counterView = new NotificationListCounterView({ collection : notifications});
         debugView = new DebugView({ model : mapModel });
-        fetch(false);
+        fetch(true);
         
 //        setInterval(function () {
 //            fetch(false);

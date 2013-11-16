@@ -1,0 +1,22 @@
+{
+  "name": "maps",
+  "version": "1.0.0",
+  "description": "assignment",
+  "main": "public\\style\\style.css",
+  "authors": [
+    "yair.yehuda@gmail.com"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/scripts/vendor",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bpopup": "*"
+  }
+}

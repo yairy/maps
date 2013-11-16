@@ -74,26 +74,19 @@ app.post('/notifications', function (req, res) {
 });
 
 app.put('/notifications/:id', function (req, res) {
-    console.log(wazeUrl + '/notifications/' + req.params.id);
-    console.log(req.param('description'));
-	var params = {};
+    var params = {};
     _.each(['lon', 'lat', 'description', 'title'], function (prop) {
         params['notification[' + prop + ']'] = req.param(prop);
     });
 
     request.put({ url : wazeUrl + '/notifications/' + req.params.id + '.json', qs : params}).pipe(res);
-//    request.post({ url : wazeUrl + '/notifications/' + req.params.id, qs : params}, function (error, response, body) {
-//        if (error) {
-//            console.log("error!!!");
-//            res.send('500', "Server Error");
-//        }
-//        else {
-//            console.log("succes!!!");
-//        }
-//            
-//    });
-
 });
+
+app.put('/notifications/:id/upvote.json', function (req, res) {
+    request.put({ url : wazeUrl + '/notifications/' + req.params.id + '/upvote.json', qs : params}).pipe(res);
+});
+
+
 
 // we'll use this form: app['delete'] to shush the linter ('delete' is a reserved word)
 app['delete']('/notifications/:id', function (req, res) {

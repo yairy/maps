@@ -5,14 +5,35 @@ body {
 }
 
 a {
-    color: #8abfcf;
+    color: #08c;
+}
+
+h1 { 
+  margin: 0;
+  font-weight: lighter;
+}
+
+header {
+  padding: 1em 0 1em 153px;
+  background: url('images/logo.png') no-repeat 5px center ;
+  background-color: #cbe3eb;
+  margin-bottom : 5px;
+}
+
+input[type='text'],
+textarea {
+  width: 30em;
+}
+
+textarea  {
+    height : 6em;
 }
 
 input[type='submit'] {
     margin-right: 5px;
 }
 
-form {
+form.notification-popup {
     padding: 1em;
 }
 
@@ -20,15 +41,9 @@ form div {
     margin: 0.5em 0;
 }
 
-form > div > span,
-form label span {
-    display: inline-block;
-    width: 6em;
-}
-
 button.show-as-link {
-    padding : 0;
-    color: #8abfcf;
+    padding : 0 3px;
+    color: #08c;
     outline: none;
     border : none;
     background-color: transparent;
@@ -37,7 +52,8 @@ button.show-as-link {
 .success-message,
 .error-message {
     display: none;
-    font-size: small
+    font-size: small;
+    padding: 0 5px;
 }
 
 .success-message {
@@ -66,7 +82,8 @@ button.show-as-link {
 }
 
 .notification-list > div {
-  padding: 5px 0    ;
+  padding: 0.5em 0 1em 0;
+  border-bottom : #ddd 1px solid;
 }
 
 .map-container {
@@ -74,7 +91,7 @@ button.show-as-link {
 }
 
 #map { 
-  height: 540px; 
+  height: 700px; 
   margin: 0 auto;
 }
 
@@ -119,4 +136,18 @@ button.show-as-link {
   color: white;
   border-radius: 4px;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+div.save-box {
+    padding : 1em;
+}
+
+div.popup {
+  border-radius : 5px;
+  padding : 2em;
+  background-color: white;
+}
+
+span.or {
+  padding : 0 1em;
 }

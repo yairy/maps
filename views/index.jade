@@ -4,7 +4,7 @@ block head
 
 block content
   header
-    h1 Notifiction Map
+    h1 Notification Center
   div.pure-g
     div.pure-u-1-4
         div.notification-list-counter Showing 10 of 
@@ -29,6 +29,17 @@ block content
               input#lat(type='text' placeholder='Latitude')
               input#lon(type='text' placeholder='Longitude')
               button.pure-button.pure-button-primary Set as Center
+  div.popup.hidden
+    form.pure-form.pure-form-stacked.notification-edit-popup
+      input.title(type='text' placeholder='Title')
+      textarea.description(type='text' placeholder='Description')
+      input.lat(type='text')
+      input.lon(type='text')
+      div.save-box
+        input.pure-button.pure-button-primary(type='submit') Save
+        span.or or
+        button.show-as-link.close Close
+      
   script#notificationTemplate(type='text/template')
     div.title 
       button.show-as-link <%- title %>
@@ -36,8 +47,10 @@ block content
       div <%- description %>
       div Lon: <%- lon %> &nbsp;
       div Lat: <%- lat %>
+      div Votes up: <%- votes_up %>
       div
-        button.pure-button.pure-button-error delete
+        button.show-as-link.edit edit
+        buttons.show-as-link.vote vote
   script#notificationPopupTemplate(type='text/template')
     form.notification-popup.pure-form.pure-form-stacked
       div    
