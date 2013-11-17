@@ -26,7 +26,7 @@ waze.map = (function () {
         
             for (i = 0, l = this.models.length; i < l; i = i + 1) {
                 this._removeReference(this.models[i]);
-                this.models[i].trigger('remove', this.models[i], this);
+                this.models[i].trigger('remove', this.models[i], this); // This is the line I needed to add
             }
         
             this._reset();
@@ -44,59 +44,14 @@ waze.map = (function () {
     
     NotificationView = Backbone.View.extend({
         tagName:  'li',
-        template: _.template($('#notificationTemplate').html()),
+        template: _.template($('#notificationTemplate').html()), // using underscore micro templating engine
         events: {
             'click .title button'   : 'toggleNotification',
             'click button.edit'   : 'launchPopup'
         },
-        
-		launchPopup: function () {
-            var notification = this.model,
-                that = this;
-          
-            // We'll use bpopup to sow a simple modal 
-            $('div.popup').bPopup({
-                onOpen : function () {
-                    var $form = $('form.notification-edit-popup');
-                    that.modelToForm($form, notification); //We unserialize the model to the form
-                    $form.submit(function (event) {
-                        event.preventDefault();
-                        that.formToModel($form, notification); // when user submits, serialize the form input to the model and save it
-                        notification.save({}, {
-                            url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
-                            success : function () {
-                                $form.addClass('success');
-                                setTimeout(function () { }, 1000);
-                            },
-                            error : function () {
-                                $form.addClass('error');
-                            }
-                        });
-                        
-                    });
-					
-					that.registerUpVote($form);
-					$form.find('.closebutton').click(function (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    });
                 
-                    // handle deleting the notification
-                    $form.find('button.delete').click(function (event) {
-                        event.preventDefault();
-                        notification.destroy({
-							url : '/notifications/' + notification.get('id'),
-							success : function () { $('div.popup').bPopup().close(); }
-						});
-                    });
-                    
-                    $form.find("input[type=text]").first().focus();
-                },
-                closeClass : 'close'
-            });
-        },
-        
-		modelToForm: function ($form, notification) {
+		/* Sets the form fields on the popup accrding to the notification */
+        modelToForm: function ($form, notification) {
             $form.find('.lon').data('lon', notification.get('lon'));
             $form.find('.lon').text(parseFloat(notification.escape('lon')).toFixed(4));
             $form.find('.lat').data('lat', notification.get('lat'));
@@ -106,7 +61,8 @@ waze.map = (function () {
             $form.find('.vote-up').text(notification.get('votes_up'));
         },
         
-		formToModel: function ($form, notification) {
+		/* ... and the other way around */
+        formToModel: function ($form, notification) {
             notification.set('lon', $form.find('.lon').data('lon'));
             notification.set('lat', $form.find('.lat').data('lat'));
             notification.set('description', $form.find('.description').val());
@@ -129,6 +85,8 @@ waze.map = (function () {
         },
         
 		remove: function () {
+            // This fixes a problem where the notification is removed for unsaved notification, if the popup causes the map to refresh
+            // when it chnages the bounds
             if (!this.model.isNew()) {
                 this.$el.remove();
                 M.removeLayer(this.marker);
@@ -144,13 +102,16 @@ waze.map = (function () {
         renderMarker : function () {
             var that = this,
                 notification = this.model,
-                options = { title : notification.get('title'), riseOnHover : true };
+                options = { riseOnHover : true };
             
             // Create a new marker and add it to the map. Bind a popup to be opened when a user clicks on the marker.
             this.marker = L.marker([notification.get('lat'), notification.get('lon')], options);
             this.marker.addTo(M);
+            
+            // Here we'll use a template from the html that's under 
             this.marker.bindPopup($('#notificationPopupTemplate').html(), { keepInView : true });
             
+            // This will handle the behavior when the popup opens on the map
             this.marker.on('popupopen', function (event) {
                 M.popupOpen = true;
                 var $form = $('form.notification-popup');
@@ -163,7 +124,7 @@ waze.map = (function () {
                         url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                         success : function () {
                             $form.addClass('success');
-                            setTimeout(function () {
+                            setTimeout(function () { // we'll display a success message and close the popup
                                 that.marker.closePopup();
                                 M.popupOpen = false;
                             }, 1000);
@@ -174,10 +135,9 @@ waze.map = (function () {
                     });
                     
                 });
-				that.registerUpVote($form);
+				that.registerUpVote($form); //here we'll registert the bevior when cliking the 'vote up' button
+                // we can't use notification.save - see the doc
 				
-
-                
                 $form.find('button.delete').click(function (event) {
                     event.preventDefault();
                     notification.destroy({
@@ -186,11 +146,66 @@ waze.map = (function () {
                     });
                 });
             });
-            if (this.model.isNew()) {
+            if (this.model.isNew()) { // if this is a new notification, we'll open the popup right away
                 this.marker.openPopup();
             }
 
         },
+        
+        // This will execute when the user clicks the edit button in the notification list
+        launchPopup: function () {
+            var notification = this.model,
+                that = this;
+          
+            // We'll use bpopup to show a simple modal 
+            $('div.popup').bPopup({
+                onOpen : function () {
+                    var $form = $('form.notification-edit-popup');
+                    that.modelToForm($form, notification); //We unserialize the model to the form
+                    
+                    // user clicks save
+                    $form.submit(function (event) {
+                        event.preventDefault();
+                        that.formToModel($form, notification); // when user submits, serialize the form input to the model and save it
+                        notification.save({}, {
+                            url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
+                            success : function () {
+                                $form.addClass('success');
+                                setTimeout(function () { $('div.popup').bPopup().close(); }, 1000);
+                            },
+                            error : function () {
+                                $form.addClass('error');
+                            }
+                        });
+                        
+                    });
+					
+					that.registerUpVote($form); //here we'll registert the bevior when cliking the 'vote up' button
+                    // we can't use notification.save - see the doc
+					
+                    // we need to stop the event - otherwise the form will submit
+                    $form.find('.closebutton').click(function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    });
+                
+                    // user clicks delete
+                    $form.find('button.delete').click(function (event) {
+                        event.preventDefault();
+                        notification.destroy({
+							url : '/notifications/' + notification.get('id'),
+							success : function () { $('div.popup').bPopup().close(); }
+						});
+                    });
+                    
+                    $form.find("input[type=text]").first().focus();
+                },
+                
+                //parameter to bpopup. Clicking on elements with this class name will close it.
+                closeClass : 'close'
+            });
+        },
+
 		registerUpVote : function ($form) {
 			var notification = this.model;
 
@@ -206,7 +221,9 @@ waze.map = (function () {
 						votes_up = votes_up + 1;
 						$('button.vote-up').text(votes_up);
 						
-						notification.set('votes_up', votes_up);
+						// while it's true that we can't use notification.save to save the notification to the server,
+                        // we can at least set the votes_property to trigger change event for element that are listening
+                        notification.set('votes_up', votes_up);
 					}
 				});
 					
@@ -215,7 +232,7 @@ waze.map = (function () {
 		},
         destroyNotification : function () {
             this.$el.remove();
-            M.removeLayer(this.marker);
+            M.removeLayer(this.marker); // this removes the marker from the map
         }
     });
     
@@ -231,9 +248,11 @@ waze.map = (function () {
             var index = this.collection.indexOf(notification),
                 view = new NotificationView({ model: notification});
             view.renderMarker();
-            if (index === 0) {
+            
+            //index is the index of the element that was added. We need to add it in the correct place in the list.
+            if (index === 0) { // it's going to be the first one...
                 this.$el.append(view.render().el);
-            } else {
+            } else { // if note, we'll get the element at index index - 1 and add it after.
                 index = index - 1;
                 this.$el.find(">li:eq(" + index + ")").after(view.render().el);
             }
@@ -255,7 +274,7 @@ waze.map = (function () {
             var size = this.collection.size();
             
             this.$el.text(size);
-            notificationCount(size);
+            updateAllNotificationsCount(size);
         }
         
     });
@@ -317,6 +336,7 @@ waze.map = (function () {
     
     });
     
+    // This s where everything starts...
     function _init() {
     
         var notifications,
@@ -326,12 +346,14 @@ waze.map = (function () {
             mapView,
             app;
         
+        // fetch notification list from server
+        // parameter reset is a boolean
         function fetch(reset) {
             notifications.fetch({reset: reset, url: ["notifications?west=", mapModel.get('west'), "&east=", mapModel.get('east'), "&north=",             mapModel.get('north'), "&south=", mapModel.get('south')].join("")});
         }
     
         notifications = new NotificationList();
-        notifications.comparator = function (first, second) {
+        notifications.comparator = function (first, second) { // This suppose to find which of the 2 points is closer to the center
             var s = Math.sqrt,
                 center = getBounds().center,
                 centerLat = center.lat,
@@ -344,7 +366,8 @@ waze.map = (function () {
                 secondDistance,
                 p;
             
-            // p is just a function that takes a numer return its power of 2
+            // p is just a function that takes a number return its power of 2
+            // just to make code more readable
             p = (function () { return function (x) { return Math.pow(x, 2); }; }());
             
             firstDisance = s(p(firstLat - centerLat) + p(firstLon - centerLon));
@@ -359,8 +382,8 @@ waze.map = (function () {
             return 0;
         };
         
-        mapModel = new MapModel(getBounds()); //setting the initial state of the model
-        mapModel.on("change", function () {
+        mapModel = new MapModel(getBounds()); //setting the initial state of the map model
+        mapModel.on("change", function () { // if the map moves, we'll re-fetch the notification list
             fetch(true);
         });
     
@@ -368,19 +391,25 @@ waze.map = (function () {
         app = new NotificationListView({ collection : notifications});
         counterView = new NotificationListCounterView({ collection : notifications});
         debugView = new DebugView({ model : mapModel });
-        fetch(true);
+        fetch(true); // Get the initial list
         
+        // Polling logic
         setInterval(function () {
-            if (!M.popupOpen) {
+            if (!M.popupOpen) { // we don't want to redraw the map when there is an open popup on the map - it will close it
                 fetch(true);
+                updateAllNotificationsCount(notifications.size()); /// ... and getting the counter of all notifications
+                
             }
         }, 20000);
         
+        // Setting the inital state of the debug line 
         _.each(['west', 'east', 'north', 'south'], function (el) {
             $("#debugInfo ." + el).text(mapModel.get(el).toFixed(4));
         });
     
     }
+    
+    /**** Some private methods **********/
     
     function getBounds() {
         var bounds = M.getBounds(),
@@ -394,7 +423,7 @@ waze.map = (function () {
         return coordinates;
     }
     
-    function notificationCount(size) {
+    function updateAllNotificationsCount(size) {
         $.ajax({
             url: '/count',
             cache: false,
