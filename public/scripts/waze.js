@@ -59,8 +59,12 @@ waze.map = (function () {
                         $.ajax({
                             url : '/notifications/' + notification.get('id') + '/upvote.json',
                             type: 'PUT',
+                            cache: false,
                             success : function () {
-                                console.log('success!!!');
+                                var votes_up = notification.get('votes_up');
+                                votes_up = votes_up + 1;
+                                
+                                notification.set('votes_up', votes_up);
                             }
                         });
                             
