@@ -13,3 +13,7 @@ results
 
 npm-debug.log
 node_modules
+public/scripts/vendor/jquery
+public/scripts/vendor/underscore
+public/scripts/vendor/backbone
+public/scripts/vendor/bpopup

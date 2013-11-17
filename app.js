@@ -83,7 +83,7 @@ app.put('/notifications/:id', function (req, res) {
 });
 
 app.put('/notifications/:id/upvote.json', function (req, res) {
-    request.put({ url : wazeUrl + '/notifications/' + req.params.id + '/upvote.json', qs : params}).pipe(res);
+    request.put({ url : wazeUrl + '/notifications/' + req.params.id + '/upvote.json'}).pipe(res);
 });
 
 

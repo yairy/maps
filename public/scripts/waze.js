@@ -12,11 +12,15 @@ waze.map = (function () {
     var Notification, NotificationList, MapModel, NotificationView,
         NotificationListView, NotificationListCounterView, MapView, DebugView, M;
     
+    /*** MODELS ***/
+    
     Notification = Backbone.Model.extend();
     
     NotificationList = Backbone.Collection.extend();
     
     MapModel = Backbone.Model.extend();
+    
+    /*** Views ***/
     
     NotificationView = Backbone.View.extend({
         tagName:  'div',
@@ -26,49 +30,54 @@ waze.map = (function () {
             'click button.edit'   : 'launchPopup'
         },
         launchPopup: function () {
-          var notification = this.model;
+            var notification = this.model,
+                that = this;
           
-          $('div.popup').bPopup({
-            onOpen : function() {
-                var $form = $('form.notification-edit-popup');
-                this.modelToForm($form,notification);
-                $form.submit(function (event) {
-                    event.preventDefault();
-                    this.formToModel($form,notification);
-                    notification.save({}, {
-                        url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
-                        success : function () {
-                            $form.addClass('success');
-                            setTimeout(function () {that.marker.closePopup(); }, 1000);
-                        },
-                        error : function () {
-                            $form.addClass('error');
-                        }
+            // We'll use bpopup to sow a simple modal 
+            $('div.popup').bPopup({
+                onOpen : function () {
+                    var $form = $('form.notification-edit-popup');
+                    this.modelToForm($form, notification); //We unserialize the model to the form
+                    $form.submit(function (event) {
+                        event.preventDefault();
+                        this.formToModel($form, notification); // when user submits, serialize the form inout to the model and save it
+                        notification.save({}, {
+                            url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
+                            success : function () {
+                                $form.addClass('success');
+                                setTimeout(function () {$('div.popup').bPopup().close(); }, 1000);
+                            },
+                            error : function () {
+                                $form.addClass('error');
+                            }
+                        });
+                        
+                    });
+                
+                    // handle deleting the notification
+                    $form.find('button.delete').click(function (event) {
+                        event.preventDefault();
+                        notification.destroy({ url : '/notifications/' + notification.get('id')});
                     });
                     
-                });
-                
-                $form.find('button.delete').click(function (event) {
-                    event.preventDefault();
-                    notification.destroy({ url : '/notifications/' + notification.get('id')});
-                });
-            },
-            closeClass : 'close'
-          });
+                    $form.find("input[type=text]").first().focus();
+                },
+                closeClass : 'close'
+            });
         },
         modelToForm: function ($form, notification) {
-                $form.find('.lon').data('lon' ,notification.get('lon'));
-                $form.find('.lon').text(parseFloat(notification.escape('lon')).toFixed(4));
-                $form.find('.lat').data('lat' ,notification.get('lat'));
-                $form.find('.lat').text(parseFloat(notification.escape('lat')).toFixed(4));
-                $form.find('.description').val(notification.escape('description'));
-                $form.find('.title').val(notification.escape('title'));        
+            $form.find('.lon').data('lon', notification.get('lon'));
+            $form.find('.lon').text(parseFloat(notification.escape('lon')).toFixed(4));
+            $form.find('.lat').data('lat', notification.get('lat'));
+            $form.find('.lat').text(parseFloat(notification.escape('lat')).toFixed(4));
+            $form.find('.description').val(notification.escape('description'));
+            $form.find('.title').val(notification.escape('title'));
         },
         formToModel: function ($form, notification) {
-                notification.set('lon', $form.find('.lon').data('lon'));
-                notification.set('lat', $form.find('.lat').data('lat'));
-                notification.set('description', $form.find('.description').val());
-                notification.set('title', $form.find('.title').val());
+            notification.set('lon', $form.find('.lon').data('lon'));
+            notification.set('lat', $form.find('.lat').data('lat'));
+            notification.set('description', $form.find('.description').val());
+            notification.set('title', $form.find('.title').val());
         },
         initialize: function () {
             this.listenTo(this.model, 'destroy', this.destroyNotification);
@@ -89,24 +98,25 @@ waze.map = (function () {
         toggleNotification : function () {
             this.$('.more-details').toggleClass('hidden');
         },
+        
+        // This will handle placing the marker on the map
         renderMarker : function () {
             var that = this,
                 notification = this.model,
                 options = { title : notification.get('title'), riseOnHover : true };
             
+            // Create a new marker and add it to the map. Bind a popup to be opened when a user clicks on the marker.
             this.marker = L.marker([notification.get('lat'), notification.get('lon')], options);
             this.marker.addTo(M);
             this.marker.bindPopup($('#notificationPopupTemplate').html(), { keepInView : true });
+            
             this.marker.on('popupopen', function (event) {
                 var $form = $('form.notification-popup');
                 
-                this.modelToForm($form,notification);
+                this.modelToForm($form, notification);
                 $form.submit(function (event) {
                     event.preventDefault();
-                    notification.set('lon', $form.find('.lon').data('lon'));
-                    notification.set('lat', $form.find('.lat').data('lat'));
-                    notification.set('description', $form.find('.description').val());
-                    notification.set('title', $form.find('.title').val());
+                    this.formToModel($form, notification);
                     notification.save({}, {
                         url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                         success : function () {
@@ -181,7 +191,6 @@ waze.map = (function () {
                 bounds;
     
             M.on('click', function (e) {
-                console.log('click');
                 var notification = new Notification({lon : e.latlng.lng, lat : e.latlng.lat, title : 'untitled', description : '', votes_up : 0});
                 that.collection.add(notification);
             });

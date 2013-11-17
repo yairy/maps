@@ -17,6 +17,9 @@
     "tests"
   ],
   "dependencies": {
-    "bpopup": "*"
+    "bpopup": "*",
+    "jquery": "1.10.2",
+    "underscore": "1.5.2",
+    "backbone": "1.1.0"
   }
 }
