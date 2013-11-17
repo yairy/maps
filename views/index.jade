@@ -7,9 +7,12 @@ block content
     h1 Notification Center
   div.pure-g
     div.pure-u-1-4
-        div.notification-list-counter Showing 10 of 
-            span.counter
+        div.notification-list-counter Showing 
+            span.notifications-displayed
+            |  of 
+            span.all-notifications
             |  notifications
+        div.showing-all.hidden Showing all notifications
         div.notification-list
     div.pure-u-3-4
       div.map-container
@@ -31,28 +34,24 @@ block content
               button.pure-button.pure-button-primary Set as Center
   div.popup.hidden
     form.pure-form.pure-form-stacked.notification-edit-popup
-      input.title(type='text' placeholder='Title')
-      textarea.description(type='text' placeholder='Description')
-      input.lat(type='text')
-      input.lon(type='text')
-      div.save-box
-        input.pure-button.pure-button-primary(type='submit') Save
-        span.or or
-        button.show-as-link.close Close
+      mixin form_content
       
   script#notificationTemplate(type='text/template')
     div.title 
       button.show-as-link <%- title %>
     div.more-details.hidden
       div <%- description %>
-      div Lon: <%- lon %> &nbsp;
-      div Lat: <%- lat %>
+      div 
+        span Lon: <%- lon %> &nbsp;
+        span Lat: <%- lat %>
       div Votes up: <%- votes_up %>
       div
         button.show-as-link.edit edit
-        buttons.show-as-link.vote vote
   script#notificationPopupTemplate(type='text/template')
     form.notification-popup.pure-form.pure-form-stacked
+      mixin form_content
+        
+mixin form_content
       div    
         label 
           span Title:
@@ -70,8 +69,10 @@ block content
       div
         input.pure-button.pure-button-primary(type='submit' value='Save')
         button.delete.pure-button.pure-button-error delete
+        button.show-as-icon.vote-up &nbsp;
         span.error-message Error
         span.success-message Success
+
         
     
 

@@ -37,10 +37,10 @@ waze.map = (function () {
             $('div.popup').bPopup({
                 onOpen : function () {
                     var $form = $('form.notification-edit-popup');
-                    this.modelToForm($form, notification); //We unserialize the model to the form
+                    that.modelToForm($form, notification); //We unserialize the model to the form
                     $form.submit(function (event) {
                         event.preventDefault();
-                        this.formToModel($form, notification); // when user submits, serialize the form inout to the model and save it
+                        that.formToModel($form, notification); // when user submits, serialize the form inout to the model and save it
                         notification.save({}, {
                             url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                             success : function () {
@@ -52,6 +52,18 @@ waze.map = (function () {
                             }
                         });
                         
+                    });
+                    $form.find('.vote-up').click(function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        $.ajax({
+                            url : '/notifications/' + notification.get('id') + '/upvote.json',
+                            type: 'PUT',
+                            success : function () {
+                                console.log('success!!!');
+                            }
+                        });
+                            
                     });
                 
                     // handle deleting the notification
@@ -72,6 +84,7 @@ waze.map = (function () {
             $form.find('.lat').text(parseFloat(notification.escape('lat')).toFixed(4));
             $form.find('.description').val(notification.escape('description'));
             $form.find('.title').val(notification.escape('title'));
+            $form.find('.vote-up').text(notification.get('votes_up'));
         },
         formToModel: function ($form, notification) {
             notification.set('lon', $form.find('.lon').data('lon'));
@@ -113,10 +126,10 @@ waze.map = (function () {
             this.marker.on('popupopen', function (event) {
                 var $form = $('form.notification-popup');
                 
-                this.modelToForm($form, notification);
+                that.modelToForm($form, notification);
                 $form.submit(function (event) {
                     event.preventDefault();
-                    this.formToModel($form, notification);
+                    that.formToModel($form, notification);
                     notification.save({}, {
                         url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                         success : function () {
@@ -173,14 +186,17 @@ waze.map = (function () {
     });
 
     NotificationListCounterView = Backbone.View.extend({
-        el: $('div.notification-list-counter span'),
+        el: $('div.notification-list-counter span.notifications-displayed'),
     
         initialize: function () {
-            this.listenTo(this.collection, 'all', this.updateConter);
+            this.listenTo(this.collection, 'all', this.updateCounter);
         },
     
-        updateConter : function () {
-            this.$el.text(this.collection.size());
+        updateCounter : function () {
+            var size = this.collection.size();
+            
+            this.$el.text(size);
+            notificationCount(size);
         }
         
     });
@@ -280,7 +296,7 @@ waze.map = (function () {
         
         mapModel = new MapModel(getBounds()); //setting the initial state of the model
         mapModel.on("change", function () {
-            fetch(false);
+            fetch(true);
         });
     
         mapView = new MapView({ collection : notifications, model : mapModel});
@@ -317,8 +333,26 @@ waze.map = (function () {
             };
         return coordinates;
     }
-
     
+    function notificationCount(size) {
+        $.ajax({
+            url: '/count',
+            cache: false,
+            success: function (data) {
+                $('span.all-notifications').text(data.count);
+                
+                if (size >= data.count) {
+                    $('div.notification-list-counter').addClass('hidden');
+                    $('div.showing-all').removeClass('hidden');
+                } else {
+                    $('div.notification-list-counter').removeClass('hidden');
+                    $('div.showing-all').addClass('hidden');
+                }
+            },
+            dataType: 'json'
+        });
+    }
+
     function initMap() {
         M = L.map('map').setView([51.505, -0.09], 13); //London!
         L.tileLayer('http://{s}.tile.cloudmade.com/d1954fa5c5934eecbd0f07c6f7d2d339/997/256/{z}/{x}/{y}.png', {

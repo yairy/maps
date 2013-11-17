@@ -63,6 +63,21 @@ app.get('/notifications', function (req, res) {
             
 });
 
+// I don't have API function just for notification count, so i'll get them all
+app.get('/count', function (req, res) {
+    request.get(wazeUrl + '/notifications/updates.json', function (error, response, body) {
+        var notifications;
+        
+        if (error) {
+            res.send('500', "Server Error");
+        } else {
+            notifications = JSON.parse(body);
+            res.json( { count : notifications.length });
+        }
+	});
+            
+});
+
 app.post('/notifications', function (req, res) {
 	var params = {};
     _.each(['lon', 'lat', 'description', 'title'], function (prop) {

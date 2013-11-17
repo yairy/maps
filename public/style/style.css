@@ -49,6 +49,20 @@ button.show-as-link {
     background-color: transparent;
 }
 
+button.show-as-icon {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    border : none;
+    background-color: transparent;
+    float: right;
+}
+
+button.show-as-icon.vote-up {
+    background: #fff url('images/vote-up.gif') no-repeat right center;
+    width: 4em;
+}
+
 .success-message,
 .error-message {
     display: none;
@@ -84,6 +98,10 @@ button.show-as-link {
 .notification-list > div {
   padding: 0.5em 0 1em 0;
   border-bottom : #ddd 1px solid;
+}
+
+.notification-list .more-details {
+  padding: 0.5em;
 }
 
 .map-container {
