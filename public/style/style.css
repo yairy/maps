@@ -162,8 +162,13 @@ div.save-box {
 
 div.popup {
   border-radius : 5px;
-  padding : 2em;
+  padding : 1em;
   background-color: white;
+}
+
+div.close-container
+ {
+  height: 16px;
 }
 
 span.or {

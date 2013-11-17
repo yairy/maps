@@ -29,7 +29,8 @@ waze.map = (function () {
             'click .title button'   : 'toggleNotification',
             'click button.edit'   : 'launchPopup'
         },
-        launchPopup: function () {
+        
+		launchPopup: function () {
             var notification = this.model,
                 that = this;
           
@@ -40,12 +41,12 @@ waze.map = (function () {
                     that.modelToForm($form, notification); //We unserialize the model to the form
                     $form.submit(function (event) {
                         event.preventDefault();
-                        that.formToModel($form, notification); // when user submits, serialize the form inout to the model and save it
+                        that.formToModel($form, notification); // when user submits, serialize the form input to the model and save it
                         notification.save({}, {
                             url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                             success : function () {
                                 $form.addClass('success');
-                                setTimeout(function () {$('div.popup').bPopup().close(); }, 1000);
+                                setTimeout(function () { }, 1000);
                             },
                             error : function () {
                                 $form.addClass('error');
@@ -53,27 +54,20 @@ waze.map = (function () {
                         });
                         
                     });
-                    $form.find('.vote-up').click(function (event) {
+					
+					that.registerUpVote($form);
+					$form.find('.closebutton').click(function (event) {
                         event.preventDefault();
                         event.stopPropagation();
-                        $.ajax({
-                            url : '/notifications/' + notification.get('id') + '/upvote.json',
-                            type: 'PUT',
-                            cache: false,
-                            success : function () {
-                                var votes_up = notification.get('votes_up');
-                                votes_up = votes_up + 1;
-                                
-                                notification.set('votes_up', votes_up);
-                            }
-                        });
-                            
                     });
                 
                     // handle deleting the notification
                     $form.find('button.delete').click(function (event) {
                         event.preventDefault();
-                        notification.destroy({ url : '/notifications/' + notification.get('id')});
+                        notification.destroy({
+							url : '/notifications/' + notification.get('id'),
+							success : function () { $('div.popup').bPopup().close(); }
+						});
                     });
                     
                     $form.find("input[type=text]").first().focus();
@@ -81,7 +75,8 @@ waze.map = (function () {
                 closeClass : 'close'
             });
         },
-        modelToForm: function ($form, notification) {
+        
+		modelToForm: function ($form, notification) {
             $form.find('.lon').data('lon', notification.get('lon'));
             $form.find('.lon').text(parseFloat(notification.escape('lon')).toFixed(4));
             $form.find('.lat').data('lat', notification.get('lat'));
@@ -90,18 +85,21 @@ waze.map = (function () {
             $form.find('.title').val(notification.escape('title'));
             $form.find('.vote-up').text(notification.get('votes_up'));
         },
-        formToModel: function ($form, notification) {
+        
+		formToModel: function ($form, notification) {
             notification.set('lon', $form.find('.lon').data('lon'));
             notification.set('lat', $form.find('.lat').data('lat'));
             notification.set('description', $form.find('.description').val());
             notification.set('title', $form.find('.title').val());
         },
-        initialize: function () {
+        
+		initialize: function () {
             this.listenTo(this.model, 'destroy', this.destroyNotification);
             this.listenTo(this.model, 'change', this.render);
             this.listenTo(this.model, 'remove', this.remove);
         },
-        render: function () {
+        
+		render: function () {
             var params = this.model.toJSON();
             
             params.lat = params.lat.toFixed(4);
@@ -109,10 +107,12 @@ waze.map = (function () {
             this.$el.html(this.template(params));
             return this;
         },
-        remove: function () {
+        
+		remove: function () {
             this.$el.remove();
         },
-        toggleNotification : function () {
+        
+		toggleNotification : function () {
             this.$('.more-details').toggleClass('hidden');
         },
         
@@ -146,6 +146,9 @@ waze.map = (function () {
                     });
                     
                 });
+				that.registerUpVote($form);
+				
+
                 
                 $form.find('button.delete').click(function (event) {
                     event.preventDefault();
@@ -157,6 +160,28 @@ waze.map = (function () {
             }
 
         },
+		registerUpVote : function ($form) {
+			var notification = this.model;
+
+			$form.find('.vote-up').click(function (event) {
+				event.preventDefault();
+				event.stopPropagation();
+				$.ajax({
+					url : '/notifications/' + notification.get('id') + '/upvote.json',
+					type: 'PUT',
+					cache: false,
+					success : function () {
+						var votes_up = notification.get('votes_up');
+						votes_up = votes_up + 1;
+						$('button.vote-up').text(votes_up);
+						
+						notification.set('votes_up', votes_up);
+					}
+				});
+					
+			});
+		
+		},
         destroyNotification : function () {
             this.$el.remove();
             M.removeLayer(this.marker);

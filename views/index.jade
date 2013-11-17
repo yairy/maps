@@ -19,14 +19,7 @@ block content
         div#map
         div#debugInfo
           div
-            span West:    
-            span.west
-            span East:
-            span.east
-            span North:
-            span.north
-            span South:
-            span.south
+            mixin debug_bounds
           div
             form.pure-form
               input#lat(type='text' placeholder='Latitude')
@@ -34,6 +27,8 @@ block content
               button.pure-button.pure-button-primary Set as Center
   div.popup.hidden
     form.pure-form.pure-form-stacked.notification-edit-popup
+      div.close-container
+        button.show-as-icon.close X
       mixin form_content
       
   script#notificationTemplate(type='text/template')
@@ -52,26 +47,38 @@ block content
       mixin form_content
         
 mixin form_content
-      div    
-        label 
-          span Title:
-          input.title(type='text')
-      div
-        label 
-          span Description:
-          input.description(type='text')
-      div
-        span Latitude:
-        span.lat
-      div
-        span Longitude:
-        span.lon
-      div
-        input.pure-button.pure-button-primary(type='submit' value='Save')
-        button.delete.pure-button.pure-button-error delete
-        button.show-as-icon.vote-up &nbsp;
-        span.error-message Error
-        span.success-message Success
+    div    
+    label 
+      span Title:
+      input.title(type='text')
+    div
+    label 
+      span Description:
+      input.description(type='text')
+    div
+    span Latitude:
+    span.lat
+    div
+    span Longitude:
+    span.lon
+    div
+    input.pure-button.pure-button-primary(type='submit' value='Save')
+    button.delete.pure-button.pure-button-error delete
+    button.show-as-icon.vote-up &nbsp;
+    span.error-message Error
+    span.success-message Success
+        
+mixin debug_bounds
+    span West:    
+    span.west
+    span East:
+    span.east
+    span North:
+    span.north
+    span South:
+    span.south
+
+
 
         
     
