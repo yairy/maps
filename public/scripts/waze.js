@@ -12,6 +12,11 @@ waze.map = (function () {
     var Notification, NotificationList, MapModel, NotificationView,
         NotificationListView, NotificationListCounterView, MapView, DebugView, M;
     
+    // I'll use this to keep track of notifications that were expanded.
+    // this is necessary because the notification list in re-rendered upon map refresh , so
+    // if a notification was expanded it would collapse it.
+    var expandedNotifications = {};
+    
     /*** MODELS ***/
     
     Notification = Backbone.Model.extend();
@@ -81,6 +86,11 @@ waze.map = (function () {
             params.lat = params.lat.toFixed(4);
             params.lon = params.lon.toFixed(4);
             this.$el.html(this.template(params));
+            
+            // this notificatio was expanded before the maps refresh, so we'll re-display it.
+            if (expandedNotifications[this.model.id] === true) {
+                this.$el.find('.more-details').removeClass('hidden');
+            }
             return this;
         },
         
@@ -96,6 +106,12 @@ waze.map = (function () {
 		toggleNotification : function () {
             this.$('.more-details').toggleClass('hidden');
             this.$('.title button').toggleClass('expanded');
+            
+            if (!this.$('.more-details').hasClass('hidden')) {
+                expandedNotifications[this.model.id] = true; // notification was expanded
+            } else {
+                delete expandedNotifications[this.model.id]; // notification was collapsed, we'll delete it
+            }
         },
         
         // This will handle placing the marker on the map
@@ -233,6 +249,7 @@ waze.map = (function () {
         destroyNotification : function () {
             this.$el.remove();
             M.removeLayer(this.marker); // this removes the marker from the map
+            delete expandedNotifications[this.model.id];
         }
     });
     

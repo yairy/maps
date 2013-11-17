@@ -17,7 +17,7 @@ var wazeUrl = 'http://test-notifications.staging.waze.com';
 
 var app = express();
 
-// all environments
+// Some standard express lines...
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

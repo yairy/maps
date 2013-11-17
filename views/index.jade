@@ -32,6 +32,8 @@ block content
         button.show-as-icon.close X
       mixin form_content
       
+  //- this is nice for templates. This script tag will be ignored by the browser, but exists in the Dom, and can be read. And it's valid.
+  //- its content can be read with innerHTML
   script#notificationTemplate(type='text/template')
     div.title 
       button.show-as-link <%- title %>
