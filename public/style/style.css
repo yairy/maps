@@ -10,6 +10,10 @@ body {
    width: 22em;
 }
 
+ul, li {
+    list-style-type: none;
+}
+
 a {
     color: #08c;
 }
@@ -102,14 +106,16 @@ button.show-as-icon.vote-up {
 }
 
 .notification-list {
-  padding: 1em;
+  padding: 0 1em;
+  margin: 0
 }
 
 .notification-list-counter {
     padding: 0 1em;
+    margin-top: 2em;
 }
 
-.notification-list > div {
+.notification-list > li {
   padding: 0.5em 0 1em 0;
   border-bottom : #ddd 1px solid;
 }
@@ -127,7 +133,7 @@ button.show-as-icon.vote-up {
 }
 
 #map { 
-  height: 700px; 
+  height: 540px; 
   margin: 0 auto;
 }
 

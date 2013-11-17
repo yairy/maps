@@ -43,7 +43,7 @@ waze.map = (function () {
     /*** Views ***/
     
     NotificationView = Backbone.View.extend({
-        tagName:  'div',
+        tagName:  'li',
         template: _.template($('#notificationTemplate').html()),
         events: {
             'click .title button'   : 'toggleNotification',
@@ -220,7 +220,7 @@ waze.map = (function () {
     });
     
     NotificationListView = Backbone.View.extend({
-        el: $('div.notification-list'),
+        el: $('ul.notification-list'),
     
         initialize: function () {
             this.listenTo(this.collection, 'add', this.addOne);
@@ -265,17 +265,21 @@ waze.map = (function () {
             var that = this,
                 bounds;
     
+            // This is where the notification is actually created. Note that in this point it isn't save yet.
             M.on('click', function (e) {
                 var notification = new Notification({lon : e.latlng.lng, lat : e.latlng.lat, title : 'untitled', description : '', votes_up : 0});
                 that.collection.add(notification);
             });
     
             M.on('viewreset moveend', function () {
+                // when the map moves , the markers will redrow. So we'll block this from happening when a dialog is open
+                // there is minor issue here, as some notification might not be seen immediatley.
                 if (!M.popupOpen) {
                     that.refreshBounds();
                 }
             });
     
+            // this will fire when the user enters the center manually in the debug form
             this.listenTo(this.model, 'change:center', this.panMap);
         },
     
