@@ -235,7 +235,7 @@ waze.map = (function () {
                 this.$el.append(view.render().el);
             } else {
                 index = index - 1;
-                this.$el.find(">div:eq(" + index + ")").after(view.render().el);
+                this.$el.find(">li:eq(" + index + ")").after(view.render().el);
             }
         },
         
