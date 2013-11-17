@@ -53,14 +53,22 @@ exports.getNotifications = function (req, res) {
 };
 
 exports.countNotifications = function (req, res) {
+
     request.get(wazeUrl + '/notifications/updates.json', function (error, response, body) {
-        var notifications;
+        var notifications,
+            active;
         
         if (error) {
             res.send('500', "Server Error");
         } else {
             notifications = JSON.parse(body);
-            res.json({ count : notifications.length });
+            active = _.filter(notifications, function (notification) {
+                if (notification.is_active) {
+                    return true;
+                }
+                return false;
+            });
+            res.json({ count : active.length });
         }
 	});
             

@@ -16,7 +16,27 @@ waze.map = (function () {
     
     Notification = Backbone.Model.extend();
     
-    NotificationList = Backbone.Collection.extend();
+    // Overiding Backbone's reset method, because by default it doesnt fire remove events for the removed models
+    NotificationList = Backbone.Collection.extend({
+        reset: function (models, options) {
+            var i, l;
+            
+            models = models || [];
+            options = options || {};
+        
+            for (i = 0, l = this.models.length; i < l; i = i + 1) {
+                this._removeReference(this.models[i]);
+                this.models[i].trigger('remove', this.models[i], this);
+            }
+        
+            this._reset();
+            this.add(models, _.extend({silent: true}, options));
+            if (!options.silent) {
+                this.trigger('reset', this, options);
+            }
+            return this;
+        }
+    });
     
     MapModel = Backbone.Model.extend();
     
@@ -109,7 +129,10 @@ waze.map = (function () {
         },
         
 		remove: function () {
-            this.$el.remove();
+            if (!this.model.isNew()) {
+                this.$el.remove();
+                M.removeLayer(this.marker);
+            }
         },
         
 		toggleNotification : function () {
@@ -129,6 +152,7 @@ waze.map = (function () {
             this.marker.bindPopup($('#notificationPopupTemplate').html(), { keepInView : true });
             
             this.marker.on('popupopen', function (event) {
+                M.popupOpen = true;
                 var $form = $('form.notification-popup');
                 
                 that.modelToForm($form, notification);
@@ -139,7 +163,10 @@ waze.map = (function () {
                         url : '/notifications' + (notification.isNew() ? '' : '/' + notification.get('id')),
                         success : function () {
                             $form.addClass('success');
-                            setTimeout(function () {that.marker.closePopup(); }, 1000);
+                            setTimeout(function () {
+                                that.marker.closePopup();
+                                M.popupOpen = false;
+                            }, 1000);
                         },
                         error : function () {
                             $form.addClass('error');
@@ -153,7 +180,10 @@ waze.map = (function () {
                 
                 $form.find('button.delete').click(function (event) {
                     event.preventDefault();
-                    notification.destroy({ url : '/notifications/' + notification.get('id')});
+                    notification.destroy({
+                        url : '/notifications/' + notification.get('id'),
+                        success : function () { M.popupOpen = false; }
+                    });
                 });
             });
             if (this.model.isNew()) {
@@ -210,7 +240,6 @@ waze.map = (function () {
         },
         
         addAll: function () {
-            this.$el.empty();
             this.collection.each(this.addOne, this);
         }
     });
@@ -242,7 +271,9 @@ waze.map = (function () {
             });
     
             M.on('viewreset moveend', function () {
-                that.refreshBounds();
+                if (!M.popupOpen) {
+                    that.refreshBounds();
+                }
             });
     
             this.listenTo(this.model, 'change:center', this.panMap);
@@ -335,16 +366,11 @@ waze.map = (function () {
         debugView = new DebugView({ model : mapModel });
         fetch(true);
         
-//        setInterval(function () {
-//            fetch(false);
-//            notifications.each(function (notification) {
-//                if (notification.get('is_active')) {
-//                    console.log(notification.get('title'));
-//                }
-//                    
-//            });
-//            
-//        }, 3000);
+        setInterval(function () {
+            if (!M.popupOpen) {
+                fetch(true);
+            }
+        }, 20000);
         
         _.each(['west', 'east', 'north', 'south'], function (el) {
             $("#debugInfo ." + el).text(mapModel.get(el).toFixed(4));
