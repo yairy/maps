@@ -114,6 +114,7 @@ waze.map = (function () {
         
 		toggleNotification : function () {
             this.$('.more-details').toggleClass('hidden');
+            this.$('.title button').toggleClass('expanded');
         },
         
         // This will handle placing the marker on the map

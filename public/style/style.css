@@ -49,6 +49,19 @@ button.show-as-link {
     background-color: transparent;
 }
 
+.notification-list .title button {
+    padding-left: 15px;
+    background: transparent url('images/arrow_collapsed.png') no-repeat left center;
+}
+
+button.show-as-link:hover {
+    text-decoration: underline;
+}
+
+button.show-as-link.expanded {
+    background: transparent url('images/arrow_expanded.png') no-repeat left center;
+}
+
 button.show-as-icon {
     display: inline-block;
     height: 16px;
